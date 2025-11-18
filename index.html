@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoinFlip - Arc Testnet Casino</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%);
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            text-align: center;
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            background: rgba(0,0,0,0.6);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0,212,255,0.3);
+            backdrop-filter: blur(10px);
+        }
+        .header h1 {
+            font-size: 2.5em;
+            background: linear-gradient(45deg, #00d4ff, #5b00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 0 0 10px 0;
+        }
+        .header p {
+            opacity: 0.8;
+            margin: 10px 0 20px;
+            font-size: 1.1em;
+        }
+        .btn-connect, .btn-flip {
+            background: linear-gradient(45deg, #00d4ff, #5b00ff);
+            border: none;
+            color: white;
+            padding: 15px 30px;
+            font-size: 1.1em;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,212,255,0.3);
+            margin: 10px;
+            min-width: 200px;
+            font-weight: 600;
+        }
+        .btn-connect:hover, .btn-flip:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,212,255,0.4);
+        }
+        .btn-flip:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .btn-flip.heads { 
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+            box-shadow: 0 4px 15px rgba(255,107,107,0.3);
+        }
+        .btn-flip.tails { 
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            box-shadow: 0 4px 15px rgba(78,205,196,0.3);
+        }
+        .balance-card {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .balance-card i { color: #00d4ff; margin-right: 10px; font-size: 1.2em; }
+        .balance-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .balance-item {
+            background: rgba(0,0,0,0.3);
+            padding: 10px;
+            border-radius: 10px;
+        }
+        .balance-item label {
+            display: block;
+            font-size: 0.8em;
+            opacity: 0.7;
+            margin-bottom: 5px;
+        }
+        .balance-item span {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        .status { 
+            font-size: 0.95em; 
+            margin: 15px 0; 
+            min-height: 24px;
+            padding: 10px;
+            background: rgba(0,212,255,0.1);
+            border-radius: 10px;
+            border-left: 3px solid #00d4ff;
+        }
+        .result { 
+            font-size: 1.1em; 
+            margin: 20px 0; 
+            padding: 20px; 
+            border-radius: 15px; 
+            background: rgba(255,255,255,0.05);
+            min-height: 60px;
+            border: 2px solid rgba(255,255,255,0.1);
+        }
+        .result a {
+            color: #00d4ff;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .result a:hover {
+            text-decoration: underline;
+        }
+        .coin-flip-area { 
+            display: flex; 
+            justify-content: center; 
+            gap: 20px; 
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+        .win { 
+            background: rgba(78,205,196,0.2) !important;
+            border-color: #4ecdc4 !important;
+            color: #4ecdc4;
+        }
+        .lose { 
+            background: rgba(255,107,107,0.2) !important;
+            border-color: #ff6b6b !important;
+            color: #ff6b6b;
+        }
+        .spinner {
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top: 3px solid #00d4ff;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .contract-status {
+            background: rgba(255,255,255,0.05);
+            padding: 10px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-size: 0.9em;
+        }
+        @media (max-width: 600px) { 
+            .container { padding: 20px; } 
+            .header h1 { font-size: 2em; } 
+            .coin-flip-area { flex-direction: column; gap: 10px; } 
+            .btn-connect, .btn-flip { width: 100%; min-width: auto; }
+            .balance-info { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="container">
+        <header class="header">
+            <h1><i class="fas fa-coins"></i> CoinFlip Arc</h1>
+            <p>Aposte 1 token em Cara ou Coroa. Ganhe 1.95x!</p>
+        </header>
+        <button id="connect" class="btn-connect">
+            <i class="fas fa-wallet"></i> Conectar Wallet
+        </button>
+        <p id="status" class="status"></p>
+        <div id="game" class="game-section" style="display:none;">
+            <div class="balance-card">
+                <div style="font-size: 1.2em; margin-bottom: 10px;">
+                    <i class="fas fa-wallet"></i>
+                    <span>Saldo: <strong id="balance">0</strong> USDC</span>
+                </div>
+                <div class="balance-info">
+                    <div class="balance-item">
+                        <label>Aposta por rodada</label>
+                        <span>1.00 <i class="fas fa-coins"></i></span>
+                    </div>
+                    <div class="balance-item">
+                        <label>Ganho (1.95x)</label>
+                        <span>1.95 <i class="fas fa-trophy"></i></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="contract-status">
+                <i class="fas fa-server"></i> Contrato: 
+                <span id="contractStatus">Verificando...</span>
+            </div>
+
+            <div class="coin-flip-area">
+                <button id="headsBtn" onclick="flip(true)" class="btn-flip heads" disabled>
+                    <i class="fas fa-h-square"></i> Cara (Heads)
+                </button>
+                <button id="tailsBtn" onclick="flip(false)" class="btn-flip tails" disabled>
+                    <i class="fas fa-t"></i> Coroa (Tails)
+                </button>
+            </div>
+            <p id="result" class="result"></p>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+    <script>
+        // ============================================
+        // CONFIGURATION - CHANGE THESE VALUES
+        // ============================================
+        const CONTRACT_ADDRESS = '0xE744B3D9198272CA52552C5b4E3917B9d0d1D6BC'; // ← PUT YOUR CONTRACT ADDRESS HERE
+        const TOKEN_DECIMALS = 18; // Arc native token uses 18 decimals
+        const CHAIN_ID = '5042002'; // Arc Testnet
+        
+        // Complete ABI
+        const CONTRACT_ABI = [
+            'function flip(bool isHeads) payable',
+            'function getContractBalance() view returns (uint256)',
+            'function canAcceptBet() view returns (bool)',
+            'function getStats() view returns (uint256 balance, uint256 gamesPlayed, uint256 winsPaid, bool isPaused, bool accepting)',
+            'function BET_AMOUNT() view returns (uint256)',
+            'event FlipResult(address indexed player, bool won, uint256 payout, bool playerChoice, bool actualResult, uint256 timestamp)'
+        ];
+
+        let provider;
+        let signer;
+        let contract;
+        let isBetting = false;
+
+        async function connect() {
+            const statusEl = document.getElementById('status');
+            statusEl.innerHTML = '🔄 Conectando...';
+            
+            if (typeof ethers === 'undefined') {
+                statusEl.innerHTML = '❌ Ethers.js não carregou! Recarregue a página.';
+                return;
+            }
+            
+            if (typeof window.ethereum === 'undefined') {
+                statusEl.innerHTML = '❌ Wallet não detectada! Instale MetaMask ou Rabby.';
+                return;
+            }
+            
+            try {
+                provider = new ethers.providers.Web3Provider(window.ethereum);
+                
+                const network = await provider.getNetwork();
+                console.log('📡 Rede detectada - Chain ID:', network.chainId.toString());
+                
+                if (network.chainId.toString() !== CHAIN_ID) {
+                    statusEl.innerHTML = `❌ Rede errada! Conecte-se à Arc Testnet (Chain ID: ${CHAIN_ID})`;
+                    return;
+                }
+                
+                await provider.send('eth_requestAccounts', []);
+                signer = provider.getSigner();
+                
+                const address = await signer.getAddress();
+                console.log('✅ Conectado! Endereço:', address);
+                statusEl.innerHTML = `🔄 Conectado! Carregando dados...`;
+                
+                // Create contract instance
+                contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+                
+                // Update balance
+                await updateBalance();
+                
+                // Check contract status
+                await checkContractStatus();
+                
+                // Show game interface
+                document.getElementById('game').style.display = 'block';
+                document.getElementById('connect').style.display = 'none';
+                statusEl.innerHTML = `✅ Pronto para jogar! Endereço: ${address.slice(0,8)}...${address.slice(-6)}`;
+                
+                // Enable buttons
+                enableButtons();
+                
+            } catch (error) {
+                console.error('❌ Erro na conexão:', error);
+                statusEl.innerHTML = `❌ Falha: ${error.message}`;
+            }
+        }
+
+        async function updateBalance() {
+            try {
+                const address = await signer.getAddress();
+                const balance = await provider.getBalance(address);
+                const formattedBalance = ethers.utils.formatUnits(balance, TOKEN_DECIMALS);
+                document.getElementById('balance').innerText = parseFloat(formattedBalance).toFixed(4);
+            } catch (error) {
+                console.error('Erro ao atualizar saldo:', error);
+            }
+        }
+
+        async function checkContractStatus() {
+            try {
+                const canBet = await contract.canAcceptBet();
+                const stats = await contract.getStats();
+                const contractBalance = ethers.utils.formatUnits(stats.balance, TOKEN_DECIMALS);
+                
+                const statusEl = document.getElementById('contractStatus');
+                
+                if (canBet) {
+                    statusEl.innerHTML = `✅ Ativo (Saldo: ${parseFloat(contractBalance).toFixed(2)} tokens)`;
+                } else {
+                    statusEl.innerHTML = `⚠️ Indisponível (Saldo insuficiente ou pausado)`;
+                    disableButtons();
+                }
+                
+                return canBet;
+            } catch (error) {
+                console.error('Erro ao verificar status do contrato:', error);
+                document.getElementById('contractStatus').innerHTML = '❌ Erro ao verificar';
+                return false;
+            }
+        }
+
+        function enableButtons() {
+            document.getElementById('headsBtn').disabled = false;
+            document.getElementById('tailsBtn').disabled = false;
+        }
+
+        function disableButtons() {
+            document.getElementById('headsBtn').disabled = true;
+            document.getElementById('tailsBtn').disabled = true;
+        }
+
+        document.getElementById('connect').onclick = connect;
+
+        async function flip(isHeads) {
+            if (isBetting) {
+                console.log('⏳ Aguarde a aposta anterior finalizar');
+                return;
+            }
+
+            const resultEl = document.getElementById('result');
+            const statusEl = document.getElementById('status');
+            
+            if (!signer || !contract) {
+                resultEl.innerHTML = '❌ Conecte a wallet primeiro!';
+                return;
+            }
+
+            // Check if contract can accept bet
+            const canBet = await checkContractStatus();
+            if (!canBet) {
+                resultEl.innerHTML = '❌ Contrato não pode aceitar apostas no momento.';
+                return;
+            }
+            
+            isBetting = true;
+            disableButtons();
+            
+            const choice = isHeads ? 'Cara (Heads)' : 'Coroa (Tails)';
+            resultEl.className = 'result';
+            resultEl.innerHTML = `🎲 Apostando em <strong>${choice}</strong>...<div class="spinner"></div>`;
+            statusEl.innerHTML = '📤 Enviando transação...';
+            console.log('🎲 Iniciando flip:', choice);
+            
+            // Get bet amount from contract
+            const betValue = await contract.BET_AMOUNT();
+            console.log('💰 Valor da aposta:', betValue.toString(), 'wei');
+            console.log('💰 Em tokens:', ethers.utils.formatUnits(betValue, TOKEN_DECIMALS));
+            
+            try {
+                const tx = await contract.flip(isHeads, { value: betValue });
+                console.log('📝 Tx enviada! Hash:', tx.hash);
+                statusEl.innerHTML = `⏳ Aguardando confirmação... <a href="https://testnet.arcscan.app/tx/${tx.hash}" target="_blank" style="color: #00d4ff;">Ver Tx</a>`;
+                
+                const receipt = await tx.wait();
+                console.log('✅ Tx confirmada!', receipt);
+                
+                // Parse event to get real result
+                let won = false;
+                let actualResult = false;
+                let payout = 0;
+                
+                if (receipt.logs && receipt.logs.length > 0) {
+                    try {
+                        const flipResultEvent = receipt.logs.find(log => {
+                            try {
+                                const parsed = contract.interface.parseLog(log);
+                                return parsed.name === 'FlipResult';
+                            } catch (e) {
+                                return false;
+                            }
+                        });
+                        
+                        if (flipResultEvent) {
+                            const parsed = contract.interface.parseLog(flipResultEvent);
+                            won = parsed.args.won;
+                            actualResult = parsed.args.actualResult;
+                            payout = parsed.args.payout;
+                            
+                            console.log('🎯 Resultado:', {
+                                won,
+                                playerChoice: isHeads ? 'Heads' : 'Tails',
+                                actualResult: actualResult ? 'Heads' : 'Tails',
+                                payout: ethers.utils.formatUnits(payout, TOKEN_DECIMALS)
+                            });
+                        }
+                    } catch (e) {
+                        console.log('Não foi possível parsear eventos');
+                    }
+                }
+                
+                // Update UI with result
+                const resultText = actualResult ? 'Cara (Heads)' : 'Coroa (Tails)';
+                
+                if (won) {
+                    const payoutAmount = ethers.utils.formatUnits(payout, TOKEN_DECIMALS);
+                    resultEl.className = 'result win';
+                    resultEl.innerHTML = `
+                        🎉 <strong>VOCÊ GANHOU!</strong><br>
+                        Resultado: ${resultText}<br>
+                        Ganho: <strong>${parseFloat(payoutAmount).toFixed(4)} tokens</strong><br>
+                        <a href="https://testnet.arcscan.app/tx/${tx.hash}" target="_blank">Ver no ArcScan</a>
+                    `;
+                } else {
+                    resultEl.className = 'result lose';
+                    resultEl.innerHTML = `
+                        😔 <strong>Você perdeu</strong><br>
+                        Resultado: ${resultText}<br>
+                        Tente novamente!<br>
+                        <a href="https://testnet.arcscan.app/tx/${tx.hash}" target="_blank">Ver no ArcScan</a>
+                    `;
+                }
+                
+                statusEl.innerHTML = '✅ Rodada concluída!';
+                
+                // Update balance
+                await updateBalance();
+                
+                // Check contract status again
+                await checkContractStatus();
+                
+            } catch (error) {
+                console.error('❌ Erro na flip:', error);
+                
+                let errorMsg = error.message;
+                if (error.code === 4001) {
+                    errorMsg = 'Transação rejeitada pelo usuário';
+                } else if (error.message.includes('insufficient funds')) {
+                    errorMsg = 'Saldo insuficiente na wallet';
+                } else if (error.message.includes('Insufficient contract balance')) {
+                    errorMsg = 'Contrato sem saldo suficiente';
+                }
+                
+                resultEl.className = 'result';
+                resultEl.innerHTML = `❌ <strong>Erro:</strong> ${errorMsg}`;
+                statusEl.innerHTML = '❌ Transação falhou';
+            } finally {
+                isBetting = false;
+                enableButtons();
+            }
+        }
+
+        // Auto-check contract status every 30 seconds
+        setInterval(() => {
+            if (contract) {
+                checkContractStatus();
+            }
+        }, 30000);
+    </script>
+</body>
+</html>
